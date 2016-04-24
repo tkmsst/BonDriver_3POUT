@@ -379,7 +379,6 @@ const BOOL cBonDriver::SetChannel(const DWORD dwSpace, const DWORD dwChannel)
 	DWORD dwFreqNo = 0;
 	DWORD dwFreq = 0;
 	int tunerNum = 0;
-	bool hasStream = TRUE;
 
 	if( m_dwCurSpace == dwSpace && m_dwCurChannel == dwChannel ) {
 		return TRUE;
@@ -412,9 +411,6 @@ const BOOL cBonDriver::SetChannel(const DWORD dwSpace, const DWORD dwChannel)
 	}
 	if( dwFreq >= 900000 ) tunerNum = 1;
 
-	//# change channel
-	if(tsthr) tsthread_stop(tsthr);
-
 	if(tunerNum != m_selectedTuner) {
 		if( tc90522_selectDevice(demodDev, tunerNum) ) return FALSE;
 		if(tunerNum & 0x1) {
@@ -429,11 +425,9 @@ const BOOL cBonDriver::SetChannel(const DWORD dwSpace, const DWORD dwChannel)
 		if( tc90522_resetDemod(demodDev, tunerNum ) ) return FALSE;
 		usleep(50000);
 		if(1471440 >= dwFreq) { // BS only
-			hasStream = FALSE;
 			for( int i = 20; i > 0; i-- ) {
 				int ret = tc90522_selectStream(demodDev, tunerNum, g_stChannels[dwSpace][dwChannel].freq.tsid );
 				if(0 == ret) {
-					hasStream = TRUE;
 					break;
 				}else if(0 > ret)
 					return FALSE;
@@ -450,8 +444,6 @@ const BOOL cBonDriver::SetChannel(const DWORD dwSpace, const DWORD dwChannel)
 	m_dwCurSpace = dwSpace;
 	m_dwCurChannel = dwChannel;
 	m_selectedTuner = tunerNum;
-
-	if(tsthr && hasStream) tsthread_start(tsthr);
 
 	for( int i = 20; i > 0; i-- ) {
 		unsigned statData[4];
