@@ -161,21 +161,14 @@ static void tsthread(void* const param)
 	}
 
 	for(;;) {
-		int num = TS_MaxNumIO;
-		for(i = 0; i < TS_MaxNumIO; i++) {
-			struct usbdevfs_urb* const  pUrb = ptrUrb + UrbSize * i;
-			if(! pUrb->buffer) {
-				if(ps->flags & 0x01) {
-					num--;
-				}else{
+		if(!(ps->flags & 0x01)) {
+			for(i = 0; i < TS_MaxNumIO; i++) {
+				struct usbdevfs_urb* const  pUrb = ptrUrb + UrbSize * i;
+				if(! pUrb->buffer) {
 					//# continue to issue a new URB request
 					submitNextURB(ps, pUrb);
 				}
 			}
-		}
-		if(0 >= num) {
-			//# no request
-			break;
 		}
 		if(ps->flags & 0x02) {
 			//# canceled
@@ -313,12 +306,8 @@ int tsthread_readable(const tsthread_ptr tptr)
 		return 0;
 	}
 	do {  //# skip empty blocks
-		if(0 != ps->actual_length[j] ) break;
-		if(ps->buff_num -1 > j) {
-			j++;
-		}else{
-			j = 0;
-		}
+		if(0 != ps->actual_length[j]) break;
+		j = (ps->buff_num -1 > j) ? j + 1 : 0;
 	} while(j != ps->buff_pop);
 	ps->buff_pop = j;
 	return ps->actual_length[j];

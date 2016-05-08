@@ -317,13 +317,6 @@ const BOOL cBonDriver::GetTsStream(BYTE *pDst, DWORD *pdwSize, DWORD *pdwRemain)
 const BOOL cBonDriver::GetTsStream(BYTE **ppDst, DWORD *pdwSize, DWORD *pdwRemain)
 {
 	if(! tsthr) return FALSE;
-	const int ret = tsthread_readable(tsthr);
-	if(ret <= 0) {
-		//# no readable data
-		*pdwSize = 0;
-		*pdwRemain = 0;
-		return TRUE;
-	}
 	*pdwSize = tsthread_read(tsthr, (void**)ppDst);
 	*pdwRemain = GetReadyCount();
 	return TRUE;
